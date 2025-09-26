@@ -18,7 +18,7 @@
 **                      na postfixový
 **
 ** Pro lepší přehlednost kódu implementujte následující pomocné funkce:
-**    
+**
 **    untilLeftPar ... vyprázdnění zásobníku až po levou závorku
 **    doOperation .... zpracování operátoru konvertovaného výrazu
 **
@@ -53,8 +53,17 @@ bool solved;
  * @param postfixExpression Znakový řetězec obsahující výsledný postfixový výraz
  * @param postfixExpressionLength Ukazatel na aktuální délku výsledného postfixového výrazu
  */
-void untilLeftPar( Stack *stack, char *postfixExpression, unsigned *postfixExpressionLength ) {
-	solved = false; /* V případě řešení, smažte tento řádek! */
+void untilLeftPar(Stack *stack, char *postfixExpression, unsigned *postfixExpressionLength)
+{
+	char topChar;
+	while (!Stack_IsEmpty(stack))
+	{
+		Stack_Top(stack, &topChar);
+		Stack_Pop(stack);
+		if (topChar == '(')
+			return;
+		postfixExpression[(*postfixExpressionLength)++] = topChar;
+	}
 }
 
 /**
@@ -73,8 +82,24 @@ void untilLeftPar( Stack *stack, char *postfixExpression, unsigned *postfixExpre
  * @param postfixExpression Znakový řetězec obsahující výsledný postfixový výraz
  * @param postfixExpressionLength Ukazatel na aktuální délku výsledného postfixového výrazu
  */
-void doOperation( Stack *stack, char c, char *postfixExpression, unsigned *postfixExpressionLength ) {
-	solved = false; /* V případě řešení, smažte tento řádek! */
+void doOperation(Stack *stack, char c, char *postfixExpression, unsigned *postfixExpressionLength)
+{
+#define PREC(op) ((op) == '+' || (op) == '-' ? 1 : (op) == '*' || (op) == '/' ? 2 \
+																			  : 0)
+	char topOp;
+
+	while (!Stack_IsEmpty(stack))
+	{
+		Stack_Top(stack, &topOp);
+		if (topOp == '(' || PREC(topOp) < PREC(c))
+			break;
+
+		Stack_Pop(stack);
+		postfixExpression[(*postfixExpressionLength)++] = topOp;
+	}
+
+	Stack_Push(stack, c);
+#undef PREC
 }
 
 /**
@@ -125,11 +150,54 @@ void doOperation( Stack *stack, char c, char *postfixExpression, unsigned *postf
  *
  * @returns znakový řetězec obsahující výsledný postfixový výraz
  */
-char *infix2postfix( const char *infixExpression ) {
-	solved = false; /* V případě řešení, smažte tento řádek! */
-	return NULL;
-}
+char *infix2postfix(const char *infixExpression)
+{
+	Stack stackOps;
+	Stack_Init(&stackOps);
 
+	char *postfixExpression = (char *)malloc(MAX_LEN * sizeof(char));
+	if (!postfixExpression)
+		return NULL;
+
+	unsigned postfixLength = 0;
+
+	for (int i = 0; infixExpression[i] != '='; i++)
+	{
+		char c = infixExpression[i];
+
+		if ((c >= '0' && c <= '9') ||
+			(c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z'))
+		{
+			postfixExpression[postfixLength++] = c;
+		}
+		else if (c == '(')
+		{
+			Stack_Push(&stackOps, c);
+		}
+		else if (c == ')')
+		{
+			untilLeftPar(&stackOps, postfixExpression, &postfixLength);
+		}
+		else // operátor + - * /
+		{
+			doOperation(&stackOps, c, postfixExpression, &postfixLength);
+		}
+	}
+
+	while (!Stack_IsEmpty(&stackOps))
+	{
+		char op;
+		Stack_Top(&stackOps, &op);
+		Stack_Pop(&stackOps);
+		postfixExpression[postfixLength++] = op;
+	}
+
+	postfixExpression[postfixLength++] = '='; // ukončovací znak
+	postfixExpression[postfixLength] = '\0';  // nulový znak
+
+	return postfixExpression;
+}
 
 /**
  * Pomocná metoda pro vložení celočíselné hodnoty na zásobník.
@@ -142,8 +210,13 @@ char *infix2postfix( const char *infixExpression ) {
  * @param stack ukazatel na inicializovanou strukturu zásobníku
  * @param value hodnota k vložení na zásobník
  */
-void expr_value_push( Stack *stack, int value ) {
-	solved = false; /* V případě řešení, smažte tento řádek! */
+void expr_value_push(Stack *stack, int value)
+{
+	// uložíme int po jednotlivých bajtech (little endian)
+	for (int i = 0; i < 4; i++)
+	{
+		Stack_Push(stack, (value >> (i * 8)) & 0xFF);
+	}
 }
 
 /**
@@ -158,11 +231,17 @@ void expr_value_push( Stack *stack, int value ) {
  * @param value ukazatel na celočíselnou proměnnou pro uložení
  *   výsledné celočíselné hodnoty z vrcholu zásobníku
  */
-void expr_value_pop( Stack *stack, int *value ) {
-	solved = false; /* V případě řešení, smažte tento řádek! */
+void expr_value_pop(Stack *stack, int *value)
+{
 	*value = 0;
+	for (int i = 3; i >= 0; i--)
+	{
+		char c;
+		Stack_Top(stack, &c); // nejdříve přečti vrchol
+		Stack_Pop(stack);	  // potom odstraň
+		*value |= ((unsigned char)c) << (i * 8);
+	}
 }
-
 
 /**
  * Tato metoda provede vyhodnocení výrazu zadaném v `infixExpression`,
@@ -187,9 +266,78 @@ void expr_value_pop( Stack *stack, int *value ) {
  * @returns true v případě úspěšného vyhodnocení daného výrazu
  * 	 na základě poskytnutých hodnot proměnných, false jinak
  */
-bool eval( const char *infixExpression, VariableValue variableValues[], int variableValueCount, int *value ) {
-	solved = false; /* V případě řešení, smažte tento řádek! */
-	return NULL;
+bool eval(const char *infixExpression, VariableValue variableValues[], int variableValueCount, int *value)
+{
+	char *postfix = infix2postfix(infixExpression);
+
+	if (!postfix)
+	{
+		return false;
+	}
+
+	Stack stackEval;
+	Stack_Init(&stackEval);
+
+	for (int i = 0; postfix[i] != '='; i++)
+	{
+		if ((postfix[i] >= '0' && postfix[i] <= '9'))
+		{
+			expr_value_push(&stackEval, postfix[i] - '0');
+		}
+		else if ((postfix[i] >= 'a' && postfix[i] <= 'z') ||
+				 (postfix[i] >= 'A' && postfix[i] <= 'Z'))
+		{
+			for (int j = 0; j < variableValueCount; j++)
+			{
+				if (variableValues[j].name == postfix[i])
+				{
+					expr_value_push(&stackEval, variableValues[j].value);
+					break;
+				}
+			}
+		}
+		else if (postfix[i] == '+' || postfix[i] == '-' || postfix[i] == '*' || postfix[i] == '/')
+		{
+			int b;
+			expr_value_pop(&stackEval, &b);
+			int a;
+			expr_value_pop(&stackEval, &a);
+			int res;
+			switch (postfix[i])
+			{
+			case '+':
+				res = a + b;
+				break;
+			case '-':
+				res = a - b;
+				break;
+			case '*':
+				res = a * b;
+				break;
+			default:
+				if (b == 0)
+				{
+					free(postfix);
+					return false;
+				}
+				res = a / b;
+				break;
+			}
+			expr_value_push(&stackEval, res);
+		}
+	}
+	int finalValue;
+	expr_value_pop(&stackEval, &finalValue);
+
+	// zásobník musí být prázdný po odstranění posledního intu
+	if (!Stack_IsEmpty(&stackEval))
+	{
+		Stack_Dispose(&stackEval);
+		return false;
+	}
+	*value = finalValue;
+	free(postfix);
+	return true;
 }
 
 /* Konec c204.c */

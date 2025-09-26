@@ -29,14 +29,15 @@
 /** Globální proměnná - indikuje, zda byla operace řešena. */
 extern bool solved;
 
-typedef struct var_value_t {
+typedef struct var_value_t
+{
 	char name;
 	int value;
 } VariableValue;
 
-char *infix2postfix( const char *infixExpression );
+char *infix2postfix(const char *infixExpression);
 
-bool eval( const char *infixExpression, VariableValue variableValues[], int variableValueCount, int *value );
+bool eval(const char *infixExpression, VariableValue variableValues[], int variableValueCount, int *value);
 
 #endif
 

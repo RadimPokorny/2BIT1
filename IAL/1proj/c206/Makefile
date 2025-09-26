@@ -4,17 +4,18 @@ TEST_OUTPUTS=$(PROJECT)-test.out $(PROJECT)-test-advanced.out
 PROG=$(PROJECT)-test
 CC=gcc
 CFLAGS=-std=c11 -Wall -Wextra -pedantic -lm -fcommon
-SHELL=bash
+SHELL=cmd
 
 .PHONY: all run tests clean purge
 
 all: $(PROG)
 
 run: $(PROG)
-	@./$(PROG) > current-test.out
-	@echo -e "\nTest output differences:"
-	@diff -u --report-identical-files --text $(PROG).out current-test.out
-	@rm -f current-test.out
+	$(PROG).exe > current-test.out
+	@echo.
+	@echo Test output differences:
+	@fc /n $(PROG).out current-test.out
+	@del current-test.out
 
 tests: $(TESTS)
 
