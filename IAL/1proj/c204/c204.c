@@ -56,12 +56,16 @@ bool solved;
 void untilLeftPar(Stack *stack, char *postfixExpression, unsigned *postfixExpressionLength)
 {
 	char topChar;
+	// Provádí se cyklus do té doby, než je stack prázdný
 	while (!Stack_IsEmpty(stack))
 	{
+		// Obrdržím vrchol zásobníku, znak, s kterým se jde pracovat
 		Stack_Top(stack, &topChar);
 		Stack_Pop(stack);
+		// Pokud je znak začátek závorky, cyklus a funkce skončí
 		if (topChar == '(')
 			return;
+		// Příslušný znak se vloží na vrchol
 		postfixExpression[(*postfixExpressionLength)++] = topChar;
 	}
 }
@@ -84,20 +88,24 @@ void untilLeftPar(Stack *stack, char *postfixExpression, unsigned *postfixExpres
  */
 void doOperation(Stack *stack, char c, char *postfixExpression, unsigned *postfixExpressionLength)
 {
+	// Makro pro řešení priorit operátorů
 #define PREC(op) ((op) == '+' || (op) == '-' ? 1 : (op) == '*' || (op) == '/' ? 2 \
 																			  : 0)
 	char topOp;
-
+	// Provádí se tak dlouho, dokud není stack prázdný
 	while (!Stack_IsEmpty(stack))
 	{
+		// Získáme vrcholní znak, tedy operátor
 		Stack_Top(stack, &topOp);
+		// Ptáme se, zda-li uložený operátor má menší prioritu, než ten, který byl předán parametrem funkce nebo se znak rovná levé závorce
 		if (topOp == '(' || PREC(topOp) < PREC(c))
 			break;
-
+		// Popne se vrchol zásobníku
 		Stack_Pop(stack);
+		// do postfixového výrazu přidáme operátor, který jsme si uložili ze zásobníku
 		postfixExpression[(*postfixExpressionLength)++] = topOp;
 	}
-
+	//Operátor dáme na vrchol stacku
 	Stack_Push(stack, c);
 #undef PREC
 }
@@ -152,39 +160,49 @@ void doOperation(Stack *stack, char c, char *postfixExpression, unsigned *postfi
  */
 char *infix2postfix(const char *infixExpression)
 {
+	// Inicializuje se zásobník pro operátory
 	Stack stackOps;
 	Stack_Init(&stackOps);
 
+	// Alokujeme místo v paměti pro pole znaků
 	char *postfixExpression = (char *)malloc(MAX_LEN * sizeof(char));
+	// Konec, pokud se malloc neprovede úspěšně
 	if (!postfixExpression)
 		return NULL;
-
+	// Inicialzuje se proměnná, která nemá znaménko
 	unsigned postfixLength = 0;
 
+	// Iteruje se pole znaků, dokud se znak nerovná "="
 	for (int i = 0; infixExpression[i] != '='; i++)
 	{
+		// Uložím si znak do proměnné
 		char c = infixExpression[i];
 
+		// Pokud je znak proměnná (znak z abecedy nebo číslo), tak se znak uloží do postfix výrazu
 		if ((c >= '0' && c <= '9') ||
 			(c >= 'a' && c <= 'z') ||
 			(c >= 'A' && c <= 'Z'))
 		{
 			postfixExpression[postfixLength++] = c;
 		}
+		// Jestli je znak levá závorka, tak se znak pushne na vrchol zásobníku
 		else if (c == '(')
 		{
 			Stack_Push(&stackOps, c);
 		}
+		// Pokud je znak pravá závorka, tak zavoláme funkci, která postupně vyprázdňuje zásobník
 		else if (c == ')')
 		{
 			untilLeftPar(&stackOps, postfixExpression, &postfixLength);
 		}
-		else // operátor + - * /
+		// Pokud je znak operátor, provede se operace
+		else 
 		{
 			doOperation(&stackOps, c, postfixExpression, &postfixLength);
 		}
 	}
 
+	// Vyprazdňuje se zásobník a zaplňuje se postfix výraz
 	while (!Stack_IsEmpty(&stackOps))
 	{
 		char op;
@@ -193,9 +211,12 @@ char *infix2postfix(const char *infixExpression)
 		postfixExpression[postfixLength++] = op;
 	}
 
-	postfixExpression[postfixLength++] = '='; // ukončovací znak
-	postfixExpression[postfixLength] = '\0';  // nulový znak
+	// ukončovací znak
+	postfixExpression[postfixLength++] = '='; 
+	// nulový znak
+	postfixExpression[postfixLength] = '\0'; 
 
+	// Vrací se finální výraz v postfix formě
 	return postfixExpression;
 }
 
@@ -212,7 +233,7 @@ char *infix2postfix(const char *infixExpression)
  */
 void expr_value_push(Stack *stack, int value)
 {
-	// uložíme int po jednotlivých bajtech (little endian)
+	// Uložíme integer po jednotlivých bajtech (little endian)
 	for (int i = 0; i < 4; i++)
 	{
 		Stack_Push(stack, (value >> (i * 8)) & 0xFF);
@@ -234,11 +255,12 @@ void expr_value_push(Stack *stack, int value)
 void expr_value_pop(Stack *stack, int *value)
 {
 	*value = 0;
+	// Cyklus bere 4 bajty ze zásobníku a složí je dohromady do value
 	for (int i = 3; i >= 0; i--)
 	{
 		char c;
-		Stack_Top(stack, &c); // nejdříve přečti vrchol
-		Stack_Pop(stack);	  // potom odstraň
+		Stack_Top(stack, &c); 
+		Stack_Pop(stack);	
 		*value |= ((unsigned char)c) << (i * 8);
 	}
 }
@@ -268,22 +290,28 @@ void expr_value_pop(Stack *stack, int *value)
  */
 bool eval(const char *infixExpression, VariableValue variableValues[], int variableValueCount, int *value)
 {
+	// V poli charů bude uložen postfixový výraz
 	char *postfix = infix2postfix(infixExpression);
 
+	// Pokud se převod nepovede, funkce končí a vrací false
 	if (!postfix)
 	{
 		return false;
 	}
 
+	// Inicializuzje se zásobník pro výpočet
 	Stack stackEval;
 	Stack_Init(&stackEval);
 
+	// Iterujeme, dokud se znak nerovná znaku "="
 	for (int i = 0; postfix[i] != '='; i++)
 	{
+		// Pokud je znak číslo, tak se na zásobník vloží číslo
 		if ((postfix[i] >= '0' && postfix[i] <= '9'))
 		{
 			expr_value_push(&stackEval, postfix[i] - '0');
 		}
+		// Pokud máme proměnnou, najde se pro ní hodnota (ty jsou předané v parametru funkce) a vloží se na vrchol zásobníku
 		else if ((postfix[i] >= 'a' && postfix[i] <= 'z') ||
 				 (postfix[i] >= 'A' && postfix[i] <= 'Z'))
 		{
@@ -296,6 +324,7 @@ bool eval(const char *infixExpression, VariableValue variableValues[], int varia
 				}
 			}
 		}
+		// Pokud se jedná o operaci, vezme se proměnná z vrcholu zásobníku a druhá, která je pod vrcholem
 		else if (postfix[i] == '+' || postfix[i] == '-' || postfix[i] == '*' || postfix[i] == '/')
 		{
 			int b;
@@ -303,6 +332,7 @@ bool eval(const char *infixExpression, VariableValue variableValues[], int varia
 			int a;
 			expr_value_pop(&stackEval, &a);
 			int res;
+			// Na základě znaménka se vykoná příslušná operace a uloží se do proměnné res
 			switch (postfix[i])
 			{
 			case '+':
@@ -314,6 +344,7 @@ bool eval(const char *infixExpression, VariableValue variableValues[], int varia
 			case '*':
 				res = a * b;
 				break;
+			// Default je přiřazan dělení a pokud je jmenovatel číslo "0", tak operace skončí (Výraz nebylo možné vypočítat) a uvolní se místo v paměti alokované pro proměnnou postfix
 			default:
 				if (b == 0)
 				{
@@ -323,20 +354,24 @@ bool eval(const char *infixExpression, VariableValue variableValues[], int varia
 				res = a / b;
 				break;
 			}
+			// Vloží se výsledek na vrchol zásobníku
 			expr_value_push(&stackEval, res);
 		}
 	}
+	// Je vytvořena finální proměnná pro výsledek (res nebyl v potřebném bloku) a je také vyplněna výsledkem
 	int finalValue;
 	expr_value_pop(&stackEval, &finalValue);
 
-	// zásobník musí být prázdný po odstranění posledního intu
+	// Zásobník se vyprázdní, pokud už není prázdný
 	if (!Stack_IsEmpty(&stackEval))
 	{
 		Stack_Dispose(&stackEval);
 		return false;
 	}
+	// Přiřadí se výsledek parametru funkci a uvolňuje se pamět
 	*value = finalValue;
 	free(postfix);
+	// Výsledek byl úspěšně vypočítán
 	return true;
 }
 

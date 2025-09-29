@@ -73,13 +73,16 @@ void Stack_Error(int error_code)
  */
 void Stack_Init(Stack *stack)
 {
+	// Pokud je stack NULL, vrací se error
 	if (stack == NULL)
 	{
 		Stack_Error(SERR_INIT);
 		return;
 	}
 	stack->topIndex = -1;
+	//Alokace paměti pro stack
 	stack->array = (char *)malloc(MAX_STACK * sizeof(char));
+	//Pokud malloc failne, vrací se error
 	if (stack->array == NULL)
 	{
 		Stack_Error(SERR_INIT);
@@ -98,6 +101,7 @@ void Stack_Init(Stack *stack)
  */
 bool Stack_IsEmpty(const Stack *stack)
 {
+	// Vrací se hodnota podle operátoru
 	return stack->topIndex == -1 ? 1 : 0;
 }
 /**
@@ -114,6 +118,7 @@ bool Stack_IsEmpty(const Stack *stack)
  */
 bool Stack_IsFull(const Stack *stack)
 {
+	// Návratová hodnota vrací true, pokud se topIndex rovná konstantě STACK_SIZE
 	return stack->topIndex == STACK_SIZE - 1 ? 1 : 0;
 }
 
@@ -131,11 +136,13 @@ bool Stack_IsFull(const Stack *stack)
  */
 void Stack_Top(const Stack *stack, char *dataPtr)
 {
+	//Pokud je stack prázdný, vypisuje se error
 	if (Stack_IsEmpty(stack))
 	{
 		Stack_Error(SERR_TOP);
 		return;
 	}
+	// Na data pointer vracíme top index hodnotu stacku
 	*dataPtr = stack->array[stack->topIndex];
 }
 
@@ -153,10 +160,12 @@ void Stack_Top(const Stack *stack, char *dataPtr)
  */
 void Stack_Pop(Stack *stack)
 {
+	// Pokud je stack prázdný, operace selže a vypisuje se error
 	if (Stack_IsEmpty(stack))
 	{
 		return;
 	}
+	// Dekrementujeme topIndex, abychom snížili vrchol
 	stack->topIndex--;
 }
 
@@ -172,12 +181,15 @@ void Stack_Pop(Stack *stack)
  */
 void Stack_Push(Stack *stack, char data)
 {
+	// Pokud je stack plný, nic se dál nevloží do něj
 	if (Stack_IsFull(stack))
 	{
 		Stack_Error(SERR_PUSH);
 		return;
 	}
+	// Zvýší se top index, abychom potom mohli přistoupit na nejvíc top prvek
 	stack->topIndex++;
+	// Vložíme data na vrchol
 	stack->array[stack->topIndex] = data;
 }
 
@@ -189,11 +201,13 @@ void Stack_Push(Stack *stack, char data)
  */
 void Stack_Dispose(Stack *stack)
 {
+	//Pokud stack není null, tak uvolníme pamět celému array
 	if (stack->array != NULL)
 	{
 		free(stack->array);
 		stack->array = NULL;
 	}
+	//Top index značí prázdný pole
 	stack->topIndex = -1;
 }
 

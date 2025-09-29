@@ -81,6 +81,7 @@ void DLL_Error(void)
  */
 void DLL_Init(DLList *list)
 {
+	// Vše je nastaveno na nulu
 	list->lastElement = NULL;
 	list->activeElement = NULL;
 	list->firstElement = NULL;
@@ -96,13 +97,18 @@ void DLL_Init(DLList *list)
  */
 void DLL_Dispose(DLList *list)
 {
+	// V Cyklu se pokaždé přistupuju k prvnímu prvku listu do té doby, než žádný nezbude
 	DLLElementPtr elmPtr;
 	while (list->firstElement != NULL)
 	{
+		// Předá se reference novému prvku
 		elmPtr = list->firstElement;
+		// Následující prvek se přesune na předchozí pozici (pozice -= 1)
 		list->firstElement = list->firstElement->nextElement;
+		// Uvolní se místo v paměti pro prvek
 		free(elmPtr);
 	}
+	// Vše je vynulováno
 	list->activeElement = NULL;
 	list->lastElement = NULL;
 	list->currentLength = 0;
@@ -118,24 +124,33 @@ void DLL_Dispose(DLList *list)
  */
 void DLL_InsertFirst(DLList *list, long data)
 {
+	// Alokuje se místo pro nový prvek
 	DLLElementPtr newElm = (DLLElementPtr)malloc(sizeof(struct DLLElement));
+	// Neprovedla se alokace, vypíše se error a konec funkce
 	if (newElm == NULL)
 	{
 		DLL_Error();
 		return;
 	}
+	// Nový prvek obdrží data
 	newElm->data = data;
+	// První prvek se přesune na další pozici (pozice += 1)
 	newElm->nextElement = list->firstElement;
+	// Vyunuluje se přechozí prvek nového prvku
 	newElm->previousElement = NULL;
+	// Pokud je první prvek lsitu NULL, tak se předchozímu prvku toho prvního přiřadí data nového prvku
 	if (list->firstElement != NULL)
 	{
 		list->firstElement->previousElement = newElm;
 	}
+	// Jinak poslední prvek získá data z nového prvku
 	else
 	{
 		list->lastElement = newElm;
 	}
+	// První prvek listu získá data nového prvku
 	list->firstElement = newElm;
+	// Inkrementuje se délka
 	list->currentLength++;
 }
 
@@ -149,24 +164,33 @@ void DLL_InsertFirst(DLList *list, long data)
  */
 void DLL_InsertLast(DLList *list, long data)
 {
+	// Alokuje se místo pro nový prvek
 	DLLElementPtr newElm = (DLLElementPtr)malloc(sizeof(struct DLLElement));
+	// Alokace selže, konec
 	if (newElm == NULL)
 	{
 		DLL_Error();
 		return;
 	}
+	// nový prvek se naplní daty
 	newElm->data = data;
+	// Následující prvek není
 	newElm->nextElement = NULL;
+	// Předešlý prvek je ten, který je v listu poslední
 	newElm->previousElement = list->lastElement;
+	// Pokud je nyní poslední prvek NULL, tak se dalšímu prvku od posledního přidělí data od nového prvku
 	if (list->lastElement != NULL)
 	{
 		list->lastElement->nextElement = newElm;
 	}
+	// Jinak je první prvek naplněn daty z nového prvku
 	else
 	{
 		list->firstElement = newElm;
 	}
+	// Poslední prvek je nový prvek
 	list->lastElement = newElm;
+	// Inkrementuje se délka
 	list->currentLength++;
 }
 
@@ -179,6 +203,7 @@ void DLL_InsertLast(DLList *list, long data)
  */
 void DLL_First(DLList *list)
 {
+	// Aktivní prvek je nyní ten první
 	list->activeElement = list->firstElement;
 }
 
@@ -191,6 +216,7 @@ void DLL_First(DLList *list)
  */
 void DLL_Last(DLList *list)
 {
+	// Aktivní prvek je nyní ten poslední
 	list->activeElement = list->lastElement;
 }
 
@@ -203,11 +229,13 @@ void DLL_Last(DLList *list)
  */
 void DLL_GetFirst(DLList *list, long *dataPtr)
 {
+	// Pokud je první prvek nula, tak není nic obdrženo, nýbrž jen vyvolán error
 	if (list->firstElement == NULL)
 	{
 		DLL_Error();
 		return;
 	}
+	// Pokud není splněna podmínka, tak se data z listu předají na pointer data
 	*dataPtr = list->firstElement->data;
 }
 
@@ -220,11 +248,13 @@ void DLL_GetFirst(DLList *list, long *dataPtr)
  */
 void DLL_GetLast(DLList *list, long *dataPtr)
 {
+	// Pokud je poslední prvek NULL, tak je vypsán jen error
 	if (list->lastElement == NULL)
 	{
 		DLL_Error();
 		return;
 	}
+	// Na data pointer se dostanou data z posledního elementu listu
 	*dataPtr = list->lastElement->data;
 }
 
@@ -237,27 +267,34 @@ void DLL_GetLast(DLList *list, long *dataPtr)
  */
 void DLL_DeleteFirst(DLList *list)
 {
+	// Pokud je první prvek NULL, tak se nic neprovede
 	if (list->firstElement != NULL)
 	{
+		// První prvek na smazání se předá do jiné proměnné
 		DLLElementPtr toDelete = list->firstElement;
 
+		// Pokud je aktivní element ten první, tak bude NULL
 		if (list->activeElement == list->firstElement)
 		{
 			list->activeElement = NULL;
 		}
 
+		// Prvnímu prvku se přidělí následující hodnota od toho prvku, který bude smazán
 		list->firstElement = toDelete->nextElement;
 
+		//Pokud je první prvek NULL, tak tak ten následující je taky NULL
 		if (list->firstElement != NULL)
 		{
 			list->firstElement->previousElement = NULL;
 		}
+		// V posledním případě je první prvek ten poslední, takže se smaže posledni
 		else
 		{
 			list->lastElement = NULL;
 		}
-
+		// Uvolním místo v paměti, které bylo přiděleno proměnné toDelete
 		free(toDelete);
+		// Dekrementace délky 
 		list->currentLength--;
 	}
 }
@@ -271,27 +308,34 @@ void DLL_DeleteFirst(DLList *list)
  */
 void DLL_DeleteLast(DLList *list)
 {
+	// Pokud je last element NULL, tak se nic nestane
 	if (list->lastElement != NULL)
 	{
+		// Předá se poslední prvek do nové proměnné
 		DLLElementPtr toDelete = list->lastElement;
 
+		// Pokud je aktivní prvek ten poslední, tak se aktivní vynuluje
 		if (list->activeElement == list->lastElement)
 		{
 			list->activeElement = NULL;
 		}
 
+		// Do posledního prvku dám hnodotu z předchozího prvku, který je uchován v prvku, který bude smazán
 		list->lastElement = toDelete->previousElement;
 
+		// Pokud poslední prvek je NULL, tak následující prvek toho posledního bude NULL
 		if (list->lastElement != NULL)
 		{
 			list->lastElement->nextElement = NULL;
 		}
+		// Poslední možnost je, že první prvek je ten poslední, a tak se vynuluje ten první
 		else
 		{
 			list->firstElement = NULL;
 		}
-
+		// Uvolní se místo v paměti, které bylo alokováno pro prvek k smazání 
 		free(toDelete);
+		// Dekrementuje se délka
 		list->currentLength--;
 	}
 }
@@ -305,24 +349,30 @@ void DLL_DeleteLast(DLList *list)
  */
 void DLL_DeleteAfter(DLList *list)
 {
+	// Operace se bude provádět pouze, pokud existuje aktivní prvek a jeho následující prvek
 	if (list->activeElement != NULL && list->activeElement->nextElement != NULL)
 	{
+		// Inicializace prvku, který, bude muset být smazán
 		DLLElementPtr toDelete = list->activeElement->nextElement;
 
-		// Přepojení pointerů
+		// do následujícího prvku toho aktivního předáme data dalšího z toho, který má být smazán
 		list->activeElement->nextElement = toDelete->nextElement;
 
+		// Pokud je další prvek toho, který chcí smazat, je NULL...
 		if (toDelete->nextElement != NULL)
 		{
+			// Předchozí prvek toho následujícího k smazání se předá aktivní element od list
 			toDelete->nextElement->previousElement = list->activeElement;
 		}
 		else
 		{
-			// Mazaný prvek byl poslední
+			/// Pokud byl mazaný prvek ten poslední, tak se poslednímu předá ten aktivní prvek
 			list->lastElement = list->activeElement;
 		}
 
+		// Uvolní se místo v paměti, které bylo použito pro proměnnou toDelete
 		free(toDelete);
+		// Dekrementace délky
 		list->currentLength--;
 	}
 }
@@ -336,22 +386,29 @@ void DLL_DeleteAfter(DLList *list)
  */
 void DLL_DeleteBefore(DLList *list)
 {
+	// Pokud aktivní prvek není NULL a předešlý prvek toho aktivního není NULL, tak ..
 	if (list->activeElement != NULL && list->activeElement->previousElement != NULL)
 	{
+		// Inicializace prvku k smazání
 		DLLElementPtr toDelete = list->activeElement->previousElement;
 
+		// Předchozímu prvku toho aktivního se přidělí předchozí prvek toho, který má být smazán
 		list->activeElement->previousElement = toDelete->previousElement;
 
+		// Pkud předchozí prvek toho, který bude smazán, není NULL, tak se dalšímu toho přecdchozímu předá aktivní element listu
 		if (toDelete->previousElement != NULL)
 		{
 			toDelete->previousElement->nextElement = list->activeElement;
 		}
+		// Poslední možnost, že ten první bude aktivní prvek
 		else
 		{
 			list->firstElement = list->activeElement;
 		}
 
+		// Uvolnění paměti rezervovanou pro proměnnou
 		free(toDelete);
+		// Dekrementace délky
 		list->currentLength--;
 	}
 }
@@ -367,28 +424,38 @@ void DLL_DeleteBefore(DLList *list)
  */
 void DLL_InsertAfter(DLList *list, long data)
 {
+	// Pokud aktivní prvek není NULL, tak se provede...
 	if (list->activeElement != NULL)
 	{
+		// Alokace paměti pro nový prvek
 		DLLElementPtr newElm = (DLLElementPtr)malloc(sizeof(struct DLLElement));
+		// Pokud alokace selže, vyvolá se error
 		if (newElm == NULL)
 		{
 			DLL_Error();
 			return;
 		}
+		// Do nového prvku se předají data
 		newElm->data = data;
+		// předchozí prvek nového elementu bude ten aktivní
 		newElm->previousElement = list->activeElement;
+		// Další prvek bude ten následující aktivního prvku
 		newElm->nextElement = list->activeElement->nextElement;
 
+		// Následující prvek toho aktivního nyní bude ten nový prvek, pro který bylo alokováno místo
 		list->activeElement->nextElement = newElm;
 
+		// Pokud je další prvek NULL, tak přechozí prvek toho dalšího bude nový prvek
 		if (newElm->nextElement != NULL)
 		{
 			newElm->nextElement->previousElement = newElm;
 		}
+		// V posledním případě se poslednímu prvku předá nový prvek
 		else
 		{
 			list->lastElement = newElm;
 		}
+		// Inkrementace délky 
 		list->currentLength++;
 	}
 }
@@ -404,28 +471,39 @@ void DLL_InsertAfter(DLList *list, long data)
  */
 void DLL_InsertBefore(DLList *list, long data)
 {
+	// Pokud není active element null...
 	if (list->activeElement != NULL)
 	{
+		// Alokuje se místo v paměti pro nový prvek
 		DLLElementPtr newElm = (DLLElementPtr)malloc(sizeof(struct DLLElement));
+		// Když selže alokace, tak se vrací error
 		if (newElm == NULL)
 		{
 			DLL_Error();
 			return;
 		}
+		/* 
+		  Pokud není splněna podmínka, tak předáme novému prvku data, active element, 
+		  který je pro něj next element a previous element od active elementu, který je pro něj active element
+		*/
 		newElm->data = data;
 		newElm->nextElement = list->activeElement;
 		newElm->previousElement = list->activeElement->previousElement;
 
+		// Do listu previous elementu od active se předají data od proměnné "newElm"
 		list->activeElement->previousElement = newElm;
 
+		// Pokud je previous element od newElm NULL, tak se přidá od previousu next element data od newElmu
 		if (newElm->previousElement != NULL)
 		{
 			newElm->previousElement->nextElement = newElm;
 		}
+		// Jinak se data nového prvku přiřadí prvnímu prvku listu
 		else
 		{
 			list->firstElement = newElm;
 		}
+		// Inkrementace délky listu
 		list->currentLength++;
 	}
 }
@@ -439,11 +517,13 @@ void DLL_InsertBefore(DLList *list, long data)
  */
 void DLL_GetValue(DLList *list, long *dataPtr)
 {
+	// Pokud je aktivní element NULL, vrací se error
 	if (list->activeElement == NULL)
 	{
 		DLL_Error();
 		return;
 	}
+	// Pokud není splněna předchozí podmínka, tak pomocí activeElementu předáme data proměnné data pointeru
 	*dataPtr = list->activeElement->data;
 }
 
@@ -456,10 +536,12 @@ void DLL_GetValue(DLList *list, long *dataPtr)
  */
 void DLL_SetValue(DLList *list, long data)
 {
+	// Když je aktivní prvek NULL, funkce skončí
 	if (list->activeElement == NULL)
 	{
 		return;
 	}
+	// Když není splněna předchozí podmínka, tak jsou předána data activeElementu
 	list->activeElement->data = data;
 }
 
@@ -472,6 +554,7 @@ void DLL_SetValue(DLList *list, long data)
  */
 void DLL_Next(DLList *list)
 {
+	// Pokud není aktivní prvek NULL, tak pomocí activeElement se získá nextElement
 	if (list->activeElement != NULL)
 	{
 		list->activeElement = list->activeElement->nextElement;
@@ -487,6 +570,7 @@ void DLL_Next(DLList *list)
  */
 void DLL_Previous(DLList *list)
 {
+	// Pokud aktivní prvek není nula, tak je díky activeElement získán previousElement
 	if (list->activeElement != NULL)
 	{
 		list->activeElement = list->activeElement->previousElement;
@@ -503,10 +587,12 @@ void DLL_Previous(DLList *list)
  */
 bool DLL_IsActive(DLList *list)
 {
+	// Pokud aktivní prvek není nula, tak je aktivní
 	if (list->activeElement != NULL)
 	{
 		return true;
 	}
+	// Provede se pouze, pokud podmínka není splněna, je vráceno false
 	return false;
 }
 
