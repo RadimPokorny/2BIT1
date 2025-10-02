@@ -15,6 +15,7 @@ run: $(PROG)
 	@echo -e "\nTest output differences:"
 	@diff -u --report-identical-files --text $(PROG).out current-test.out
 	@rm -f current-test.out
+
 tests: $(TESTS)
 
 $(PROJECT)-test: $(PROJECT).c $(PROJECT)-test.c $(PROJECT)-test-utils.c
