@@ -55,6 +55,7 @@ void receive_packet(DLList *packetLists, PacketPtr packet)
 	{
 		targetList = malloc(sizeof(QosPacketList));
 		targetList->priority = packet->priority;
+		targetList ->list = malloc(sizeof(DLList));
 		DLL_Init(targetList->list);
 		DLL_InsertLast(packetLists, (long)targetList);
 	}
