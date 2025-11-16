@@ -19,7 +19,6 @@
  */
 void bst_init(bst_node_t **tree)
 {
-    *tree = NULL;
 }
 
 /*
@@ -33,21 +32,7 @@ void bst_init(bst_node_t **tree)
  */
 bool bst_search(bst_node_t *tree, char key, bst_node_content_t **value)
 {
-    if (tree == NULL)
-        return false;
-
-    if (tree->key == key)
-    {
-        *value = &tree->content;
-        return true;
-    }
-
-    if (key < tree->key)
-        return bst_search(tree->left, key, value);
-    if (key > tree->key)
-        return bst_search(tree->right, key, value);
-
-    return false;
+  return false;
 }
 
 /*
@@ -55,7 +40,7 @@ bool bst_search(bst_node_t *tree, char key, bst_node_content_t **value)
  *
  * Pokud uzel se zadaným klíče už ve stromu existuje, nahraďte jeho hodnotu.
  * Jinak vložte nový listový uzel. V případě úspěchu funkce tuto skutečnost
- * indikuje návratovou hodnotou true, v opačném případě (např. při selhání
+ * indikuje návratovou hodnotou true, v opačném případě (např. při selhání 
  * alokace) vrací funkce false.
  *
  * Výsledný strom musí splňovat podmínku vyhledávacího stromu — levý podstrom
@@ -65,30 +50,7 @@ bool bst_search(bst_node_t *tree, char key, bst_node_content_t **value)
  */
 bool bst_insert(bst_node_t **tree, char key, bst_node_content_t value)
 {
-    if (*tree == NULL)
-    {
-        bst_node_t *new_node = malloc(sizeof(bst_node_t));
-        if (new_node == NULL)
-            return false;
-
-        new_node->key = key;
-        new_node->content = value;
-        new_node->left = NULL;
-        new_node->right = NULL;
-
-        *tree = new_node;
-        return true;
-    }
-    if (key == (*tree)->key)
-    {
-        (*tree)->content = value;
-        return true;
-    }
-    if (key < (*tree)->key)
-        return bst_insert(&(*tree)->left, key, value);
-    if (key > (*tree)->key)
-        return bst_insert(&(*tree)->right, key, value);
-    return false;
+  return false;
 }
 
 /*
@@ -106,19 +68,6 @@ bool bst_insert(bst_node_t **tree, char key, bst_node_content_t value)
  */
 void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree)
 {
-    if ((*tree)->right != NULL)
-    {
-        bst_replace_by_rightmost(target, &(*tree)->right);
-    }
-    else
-    {
-        target->key = (*tree)->key;
-        target->content = (*tree)->content;
-
-        bst_node_t *old_node = *tree;
-        *tree = (*tree)->left;
-        free(old_node);
-    }
 }
 
 /*
@@ -136,35 +85,6 @@ void bst_replace_by_rightmost(bst_node_t *target, bst_node_t **tree)
  */
 void bst_delete(bst_node_t **tree, char key)
 {
-    if (*tree == NULL)
-        return;
-    if (key < (*tree)->key)
-    {
-        bst_delete(&(*tree)->left, key);
-    }
-    else if (key > (*tree)->key)
-    {
-        bst_delete(&(*tree)->right, key);
-    }
-    else
-    {
-        if ((*tree)->left == NULL)
-        {
-            bst_node_t *old_node = *tree;
-            *tree = (*tree)->right;
-            free(old_node);
-        }
-        else if ((*tree)->right == NULL)
-        {
-            bst_node_t *old_node = *tree;
-            *tree = (*tree)->left;
-            free(old_node);
-        }
-        else
-        {
-            bst_replace_by_rightmost(*tree, &(*tree)->left);
-        }
-    }
 }
 
 /*
@@ -178,14 +98,6 @@ void bst_delete(bst_node_t **tree, char key)
  */
 void bst_dispose(bst_node_t **tree)
 {
-    if (*tree == NULL)
-        return;
-
-    bst_dispose(&(*tree)->left);
-    bst_dispose(&(*tree)->right);
-
-    free(*tree);
-    *tree = NULL;
 }
 
 /*
@@ -197,11 +109,6 @@ void bst_dispose(bst_node_t **tree)
  */
 void bst_preorder(bst_node_t *tree, bst_items_t *items)
 {
-    if (tree == NULL)
-        return;
-    bst_add_node_to_items(tree, items);
-    bst_preorder(tree->left, items);
-    bst_preorder(tree->right, items);
 }
 
 /*
@@ -213,11 +120,6 @@ void bst_preorder(bst_node_t *tree, bst_items_t *items)
  */
 void bst_inorder(bst_node_t *tree, bst_items_t *items)
 {
-    if (tree == NULL)
-        return;
-    bst_inorder(tree->left, items);
-    bst_add_node_to_items(tree, items);
-    bst_inorder(tree->right, items);
 }
 
 /*
@@ -229,9 +131,4 @@ void bst_inorder(bst_node_t *tree, bst_items_t *items)
  */
 void bst_postorder(bst_node_t *tree, bst_items_t *items)
 {
-    if (tree == NULL)
-        return;
-    bst_postorder(tree->left, items);
-    bst_postorder(tree->right, items);
-    bst_add_node_to_items(tree, items);
 }
